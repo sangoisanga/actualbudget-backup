@@ -163,6 +163,28 @@ Here is timezone list at [wikipedia](https://en.wikipedia.org/wiki/List_of_tz_da
 
 Default: `UTC`
 
+## Notification
+
+### Telegram
+
+Telegram notifications are sent through the generic backup notification flow. Telegram is currently the only notification provider.
+
+Failures and successes notify by default when both `TELEGRAM_BOT_TOKEN` and `TELEGRAM_CHAT_ID` are configured. Start notifications also notify by default and can be disabled separately.
+
+Notification delivery is best-effort. If Telegram sending fails, the backup result and exit code are preserved.
+
+| Environment Variable | Default Value | Description |
+| --- | --- | --- |
+| DISPLAY_NAME | `Actual Budget` | Display name used in notification subjects. |
+| TELEGRAM_BOT_TOKEN | | Telegram bot token. |
+| TELEGRAM_CHAT_ID | | Target chat, group, or channel ID. |
+| TELEGRAM_MESSAGE_THREAD_ID | | Optional topic/thread ID for Telegram forum groups. |
+| TELEGRAM_PARSE_MODE | | Optional Telegram parse mode, such as `MarkdownV2` or `HTML`. Plain text is used when unset. |
+| TELEGRAM_DISABLE_NOTIFICATION | `FALSE` | Send Telegram messages silently when set to `TRUE`. |
+| TELEGRAM_WHEN_START | `TRUE` | Send a Telegram notification when backup starts. |
+| TELEGRAM_WHEN_SUCCESS | `TRUE` | Send a Telegram notification when backup succeeds. |
+| TELEGRAM_WHEN_FAILURE | `TRUE` | Send a Telegram notification when backup fails. |
+
 <details>
 <summary><strong>※ Other environment variables</strong></summary>
 

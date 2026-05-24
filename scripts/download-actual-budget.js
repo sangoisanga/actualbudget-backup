@@ -1,6 +1,7 @@
 const api = require('@actual-app/api');
 const path = require('path');
-const { execSync } = require('child_process');
+const fs = require('fs');
+const {execFileSync} = require('child_process');
 const argv = require('minimist')(process.argv.slice(2));
 
 // Parse arguments using minimist
@@ -15,34 +16,85 @@ const now = argv.now || 'now';
 console.log("📥 Starting download from", serverURL);
 console.log("🗂 Sync IDs:", syncIdList);
 
-(async () => {
-    for (let i = 0; i < syncIdList.length; i++) {
-        const syncId = syncIdList[i];
-        if (!syncId) continue;
+function cleanDataDir() {
+  fs.rmSync(dataDir, {recursive: true, force: true});
+  fs.mkdirSync(dataDir, {recursive: true});
+}
 
-        const e2ePassword = e2ePasswords[i] || null;
-        const zipPath = path.join(destDir, `backup.${syncId}.${now}.zip`);
+async function downloadBudget(syncId, e2ePassword) {
+  const zipPath = path.join(destDir, `backup.${syncId}.${now}.zip`);
+  let initialized = false;
+  let downloaded = false;
+  let hasError = false;
 
-        console.log(`⬇️  Downloading budget ${syncId} -> ${zipPath}`);
+  console.log(`⬇️  Downloading budget ${syncId} -> ${zipPath}`);
 
-        await api.init({ dataDir, serverURL, password });
+  try {
+    cleanDataDir();
 
-        try {
-            await api.downloadBudget(syncId, e2ePassword ? { password: e2ePassword } : {});
-            console.log(`✅ Budget ${syncId} downloaded successfully.`);
-            await api.getAccounts();
-            await api.shutdown();
+    await api.init({dataDir, serverURL, password});
+    initialized = true;
 
-            // Zip the downloaded data
-            execSync(`cd ${dataDir} && zip -r ${zipPath} .`, { stdio: 'inherit' });
-            execSync(`rm -rf ${dataDir}/*`, { stdio: 'inherit' });
-            console.log(`📦 Created zip: ${zipPath}`);
-        } catch (err) {
-            console.error(`❌ Failed to download ${syncId}:`, err);
-        } finally {
-            await api.shutdown();
-        }
+    await api.downloadBudget(syncId, e2ePassword ? {password: e2ePassword} : {});
+    await api.getAccounts();
+    downloaded = true;
+    console.log(`✅ Budget ${syncId} downloaded successfully.`);
+  } catch (err) {
+    hasError = true;
+    console.error(`❌ Failed to download ${syncId}:`, err);
+  } finally {
+    if (initialized) {
+      try {
+        await api.shutdown();
+      } catch (err) {
+        hasError = true;
+        console.error(`❌ Failed to shutdown Actual API for ${syncId}:`, err);
+      }
     }
+  }
 
-    console.log("🎉 All downloads completed!");
-})();
+  if (downloaded) {
+    try {
+      execFileSync('zip', ['-r', zipPath, '.'], {cwd: dataDir, stdio: 'inherit'});
+      console.log(`📦 Created zip: ${zipPath}`);
+    } catch (err) {
+      hasError = true;
+      console.error(`❌ Failed to create zip for ${syncId}:`, err);
+    }
+  }
+
+  cleanDataDir();
+
+  return !hasError;
+}
+
+async function main() {
+  fs.mkdirSync(destDir, {recursive: true});
+
+  let hasError = false;
+
+  for (let i = 0; i < syncIdList.length; i++) {
+    const syncId = syncIdList[i];
+    if (!syncId) continue;
+
+    const e2ePassword = e2ePasswords[i] || null;
+    const downloaded = await downloadBudget(syncId, e2ePassword);
+
+    if (!downloaded) {
+      hasError = true;
+    }
+  }
+
+  if (hasError) {
+    console.error("❌ One or more downloads failed.");
+    process.exitCode = 1;
+    return;
+  }
+
+  console.log("🎉 All downloads completed!");
+}
+
+main().catch((err) => {
+  console.error("❌ Fatal download error:", err);
+  process.exitCode = 1;
+});

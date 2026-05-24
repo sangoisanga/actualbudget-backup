@@ -14,6 +14,15 @@ services:
     #   BACKUP_FILE_SUFFIX: '%Y%m%d'
     #   BACKUP_KEEP_DAYS: 0
     #   TIMEZONE: 'UTC'
+    #   DISPLAY_NAME: 'Actual Budget'
+    #   TELEGRAM_BOT_TOKEN: ''
+    #   TELEGRAM_CHAT_ID: ''
+    #   TELEGRAM_MESSAGE_THREAD_ID: ''
+    #   TELEGRAM_PARSE_MODE: ''
+    #   TELEGRAM_DISABLE_NOTIFICATION: 'FALSE'
+    #   TELEGRAM_WHEN_START: 'TRUE'
+    #   TELEGRAM_WHEN_SUCCESS: 'TRUE'
+    #   TELEGRAM_WHEN_FAILURE: 'TRUE'
     volumes:
       - actualbudget-rclone-data:/config/
     #   - /path/to/env:/.env
