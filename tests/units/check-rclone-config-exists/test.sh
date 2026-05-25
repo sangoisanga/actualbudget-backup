@@ -1,8 +1,8 @@
 #!/bin/bash
 
 TEST_NAME="check-rclone-config-exists"
-TEST_OUTPUT_DIR="$(pwd)/${OUTPUT_DIR}/${TEST_NAME}"
-TEST_CONFIG_DIR="$(pwd)/${CONFIG_DIR}/${TEST_NAME}"
+TEST_OUTPUT_DIR="${OUTPUT_DIR}/${TEST_NAME}"
+TEST_CONFIG_DIR="${CONFIG_DIR}/${TEST_NAME}"
 
 FAILED_NUM=0
 

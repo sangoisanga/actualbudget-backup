@@ -1,7 +1,7 @@
 #!/bin/bash
 
 TEST_NAME="backup-zip-file"
-TEST_OUTPUT_DIR="$(pwd)/${OUTPUT_DIR}/${TEST_NAME}"
+TEST_OUTPUT_DIR="${OUTPUT_DIR}/${TEST_NAME}"
 BACKUP_FILE="${TEST_OUTPUT_DIR}/backup.budget-one.test.zip"
 
 FAILED_NUM=0

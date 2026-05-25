@@ -1,7 +1,7 @@
 #!/bin/bash
 
 TEST_NAME="check-rclone-flags-valid"
-TEST_OUTPUT_DIR="$(pwd)/${OUTPUT_DIR}/${TEST_NAME}"
+TEST_OUTPUT_DIR="${OUTPUT_DIR}/${TEST_NAME}"
 
 FAILED_NUM=0
 

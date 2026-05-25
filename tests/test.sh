@@ -6,7 +6,7 @@ ERROR_NUM=0
 TEST_TMP_DIR="$(pwd)/tests/.tmp"
 CONFIG_DIR="${TEST_TMP_DIR}/config"
 OUTPUT_DIR="${TEST_TMP_DIR}/output"
-REMOTE_DIR="/${OUTPUT_DIR}"
+REMOTE_DIR="/output"
 
 function color() {
     case $1 in
