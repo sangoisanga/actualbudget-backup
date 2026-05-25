@@ -35,4 +35,4 @@ test-container: check-docker test-image
 	DOCKER_IMAGE="$(TEST_IMAGE)" tests/test.sh
 
 clean-test:
-	rm -rf tests/config tests/output tests/tmp
+	rm -rf tests/.tmp

@@ -16,6 +16,8 @@
 **/.vscode
 **/.next
 **/.cache
+**/.DS_Store
+**/.idea
 **/*.*proj.user
 **/*.dbmdl
 **/*.jfm
@@ -30,5 +32,11 @@
 **/values.dev.yaml
 **/build
 **/dist
+.env.example
+AGENTS.md
 LICENSE
+NOTICE
 README.md
+docs
+thoughts
+tests/.tmp

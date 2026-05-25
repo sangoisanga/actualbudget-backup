@@ -3,8 +3,9 @@
 DOCKER_IMAGE="${DOCKER_IMAGE:-actualbudget-backup:test}"
 ERROR_NUM=0
 
-CONFIG_DIR="config"
-OUTPUT_DIR="output"
+TEST_TMP_DIR="$(pwd)/tests/.tmp"
+CONFIG_DIR="${TEST_TMP_DIR}/config"
+OUTPUT_DIR="${TEST_TMP_DIR}/output"
 REMOTE_DIR="/${OUTPUT_DIR}"
 
 function color() {
