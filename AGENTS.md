@@ -23,14 +23,36 @@ No monorepo. No repo-level package.json or lockfile. `npm install` happens insid
 
 ## Build and Test
 
-No automated tests or CI. To verify changes:
+Automated tests are driven through `Makefile`.
 
 ```sh
-# Lint and format check (must pass before committing)
-shfmt -d scripts/includes.sh scripts/backup.sh scripts/entrypoint.sh
-shellcheck scripts/includes.sh scripts/backup.sh scripts/entrypoint.sh
-node --check scripts/download-actual-budget.js
+# Lint, ShellCheck, and JS syntax checks
+make lint
 
+# Node unit tests for scripts/download-actual-budget.js
+make test-node
+
+# Build the production image and test image
+make test-image
+
+# Run Docker-based shell orchestration tests
+make test-container
+
+# Full local test flow
+make test
+```
+
+Docker-based tests require a running Docker daemon. On macOS, either Docker Desktop or Colima is acceptable. If using Colima:
+
+```sh
+brew install docker colima
+colima start
+make test
+```
+
+Manual verification examples:
+
+```sh
 # Build the Docker image
 docker build -t actualbudget-backup .
 
