@@ -1,7 +1,6 @@
 # syntax=docker/dockerfile:1
 
-FROM rclone/rclone:sha-73bcae2
-# FROM rclone/rclone:1.72.1
+FROM rclone/rclone:1.74.1
 
 LABEL "repository"="https://github.com/rodriguestiago0/actual-backup" \
   "homepage"="https://github.com/rodriguestiago0/actual-backup"
