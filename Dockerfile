@@ -2,8 +2,13 @@
 
 FROM rclone/rclone:1.74.1
 
-LABEL "repository"="https://github.com/rodriguestiago0/actual-backup" \
-  "homepage"="https://github.com/rodriguestiago0/actual-backup"
+LABEL "org.opencontainers.image.title"="Actual Budget Backup" \
+  "org.opencontainers.image.description"="Docker image for backing up Actual Budget data to rclone remotes" \
+  "org.opencontainers.image.source"="https://github.com/sangoisanga/actualbudget-backup" \
+  "org.opencontainers.image.url"="https://github.com/sangoisanga/actualbudget-backup" \
+  "org.opencontainers.image.licenses"="MIT" \
+  "repository"="https://github.com/sangoisanga/actualbudget-backup" \
+  "homepage"="https://github.com/sangoisanga/actualbudget-backup"
 
 ARG USER_NAME="backuptool"
 ARG USER_ID="1100"

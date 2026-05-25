@@ -1,8 +1,12 @@
-# Actual Budget backup
+# Actual Budget Backup
 
-Docker containers for [actualbudget](https://actualbudger.org) backup to remote.
+Docker image for backing up [Actual Budget](https://actualbudget.org) data to rclone remotes.
 
-Heavily inspired at [vaultwarden-backup](https://github.com/ttionya/vaultwarden-backup)
+## Fork Notice
+
+This repository is a fork of [rodriguestiago0/actualbudget-backup](https://github.com/rodriguestiago0/actualbudget-backup).
+
+The upstream project was based on backup workflow patterns from [ttionya/vaultwarden-backup](https://github.com/ttionya/vaultwarden-backup). This fork keeps those upstream MIT license notices and adds local modifications for this repository.
 
 > **Important:** We assume you already read the `actualbudget` [documentation](https://actualbudget.org/docs/), and have an instance up and running.
 
@@ -27,7 +31,7 @@ You can get the token by the following command.
 ```shell
 docker run --rm -it \
   --mount type=volume,source=actualbudget-rclone-data,target=/config/ \
-  rodriguestiago0/actualbudget-backup:latest \
+  sangoisanga/actualbudget-backup:latest \
   rclone config
 ```
 
@@ -38,7 +42,7 @@ After setting, check the configuration content by the following command.
 ```shell
 docker run --rm -it \
   --mount type=volume,source=actualbudget-rclone-data,target=/config/ \
-  rodriguestiago0/actualbudget-backup:latest \
+  sangoisanga/actualbudget-backup:latest \
   rclone config show
 
 # Microsoft Onedrive Example
@@ -51,28 +55,6 @@ docker run --rm -it \
 
 ### Backup
 
-#### Use Docker Compose (Recommend)
-
-Download `docker-compose.yml` to you machine, edit the [environment variables](#environment-variables) and start it.
-
-You need to go to the directory where the `docker-compose.yml` file is saved.
-
-```shell
-# Start
-docker-compose up -d
-
-# Stop
-docker-compose stop
-
-# Restart
-docker-compose restart
-
-# Remove
-docker-compose down
-```
-
-#### Automatic Backups without docker compose
-
 Start the backup container with default settings. (automatic backup at 12AM every day)
 
 ```shell
@@ -80,12 +62,17 @@ docker run -d \
   --restart=always \
   --name actualbudget_backup \
   --mount type=volume,source=actualbudget-rclone-data,target=/config/ \
-  rodriguestiago0/actualbudget-backup:latest
+  -e ACTUAL_BUDGET_URL='https://actual.example.com' \
+  -e ACTUAL_BUDGET_PASSWORD='' \
+  -e ACTUAL_BUDGET_SYNC_ID='' \
+  sangoisanga/actualbudget-backup:latest
 ```
 
 ## Environment Variables
 
 > **Note:** The container will run with no environment variables specified without error, however if you haven't set at least `ACTUAL_BUDGET_URL`, `ACTUAL_BUDGET_PASSWORD`, and `ACTUAL_BUDGET_SYNC_ID`, no backup will successfully happen.
+
+See [.env.example](.env.example) for a complete example covering supported settings.
 
 ### ACTUAL_BUDGET_URL
 
@@ -93,7 +80,7 @@ URL for the actual budget server, without a trailing `/`
 
 ### ACTUAL_BUDGET_PASSWORD
 
-Password for the actual budget server. If you're setting this through the docker-compose file, Single quotes must be escaped with by doubling them up. e.g. if your password is `SuperGo'oodPassw\ord"1` you would enter `ACTUAL_BUDGET_PASSWORD: 'SuperGo''oodPassw\ord"1'`. If you're using the env file method, you will need to work out your own way to encode your password without breaking the env file.
+Password for the actual budget server. If you're using the env file method, you will need to work out your own way to encode your password without breaking the env file.
 
 ### ACTUAL_BUDGET_SYNC_ID
 
@@ -108,7 +95,7 @@ You can view the current remote name with the following command.
 ```shell
 docker run --rm -it \
   --mount type=volume,source=actualbudget-rclone-data,target=/config/ \
-  rodriguestiago0/actualbudget-backup:latest \
+  sangoisanga/actualbudget-backup:latest \
   rclone config show
 
 # [ActualBudgetBackup] <- this
@@ -222,22 +209,50 @@ If you prefer using an env file instead of environment variables, you can map th
 ```shell
 docker run -d \
   --mount type=bind,source=/path/to/env,target=/.env \
-  rodriguestiago0/actualbudget-backup:latest
+  sangoisanga/actualbudget-backup:latest
 ```
 
 ## Docker Secrets
 
-As an alternative to passing sensitive information via environment variables, `_FILE` may be appended to the previously listed environment variables. This causes the initialization script to load the values for those variables from files present in the container. In particular, this can be used to load passwords from Docker secrets stored in `/run/secrets/<secret_name>` files.
+As an alternative to passing sensitive information via environment variables, `_FILE` may be appended to variables loaded by the initialization script. This causes the initialization script to load the values for those variables from files present in the container. In particular, this can be used to load passwords from Docker secrets stored in `/run/secrets/<secret_name>` files.
 
 ```shell
 docker run -d \
-  -e ACTUAL_BUDGET_PASSWORD=/run/secrets/actual-budget-password \
-  rodriguestiag0/actualbudget-backup:latest
+  -e ACTUAL_BUDGET_PASSWORD_FILE=/run/secrets/actual-budget-password \
+  sangoisanga/actualbudget-backup:latest
 ```
 
 ## About Priority
 
 We will use the environment variables first, followed by the contents of the file ending in `_FILE` as defined by the environment variables. Next, we will use the contents of the file ending in `_FILE` as defined in the `.env` file, and finally the values from the `.env` file itself.
+
+## Advanced Process Environment
+
+These variables are not loaded from `/.env` by the backup initializer. They only work when passed as real container environment variables, for example with `docker run -e ...`.
+
+| Environment Variable | Default Value | Description |
+| --- | --- | --- |
+| NODE_TLS_REJECT_UNAUTHORIZED | Node.js default | Set to `0` only while debugging TLS certificate verification failures in Node.js API calls. |
+| ACTUAL_API_VERSION | `latest` | Version of `@actual-app/api` installed at runtime. |
+| ACTUAL_API_DOWNLOAD_PATH | `/tmp/actual-download` | Temporary data directory used by the Actual API downloader. |
+
+## Troubleshooting
+
+### Actual API TLS errors
+
+If the backup fails while calling the Actual server API and the logs show a TLS certificate verification error, you can temporarily pass `NODE_TLS_REJECT_UNAUTHORIZED=0` as a real container environment variable to confirm whether the certificate is the issue.
+
+```shell
+docker run --rm \
+  --mount type=volume,source=actualbudget-rclone-data,target=/config/ \
+  -e ACTUAL_BUDGET_URL='https://actual.example.com' \
+  -e ACTUAL_BUDGET_PASSWORD='' \
+  -e ACTUAL_BUDGET_SYNC_ID='' \
+  -e NODE_TLS_REJECT_UNAUTHORIZED=0 \
+  sangoisanga/actualbudget-backup:latest backup
+```
+
+Only use this for troubleshooting. It disables TLS certificate verification for Node.js API calls made by the backup process. Fix the Actual server certificate or trusted CA setup before using the container for normal scheduled backups.
 
 ## Advance
 
@@ -248,4 +263,4 @@ We will use the environment variables first, followed by the contents of the fil
 
 ## License
 
-MIT
+MIT. See [LICENSE](LICENSE) and [NOTICE](NOTICE).

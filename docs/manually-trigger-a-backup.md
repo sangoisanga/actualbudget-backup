@@ -8,21 +8,16 @@ This can be useful when other programs are used to consistently schedule tasks o
 
 Previously, performing an immediate backup required overwriting the entrypoint of the image. However, with the new setup, you can perform a backup directly with a parameterless command.
 
-If you have already configured your docker compose file correctly, you can trigger this with the following command (You will need to `docker compose down` the running container first if it is running):
+Run the image with the `backup` command and the required environment variables:
 
 ```shell
-docker compose run --rm backup backup
-```
-
-If you have not configured Docker compose yet, you can run the image manually, and specify the env variables on the cli as follows
-
-```shell
-docker run \
-  --rm \
+docker run --rm \
   --name actualbudget-backup \
   --mount type=volume,source=actualbudget-rclone-data,target=/config/ \
-  -e ... \
-  rodriguestiago0/actualbudget-backup:latest backup
+  -e ACTUAL_BUDGET_URL='https://actual.example.com' \
+  -e ACTUAL_BUDGET_PASSWORD='' \
+  -e ACTUAL_BUDGET_SYNC_ID='' \
+  sangoisanga/actualbudget-backup:latest backup
 ```
 
 You also need to mount the rclone config file and set the environment variables.

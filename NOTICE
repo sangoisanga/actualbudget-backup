@@ -1,0 +1,14 @@
+# Notices
+
+This project is distributed under the MIT License.
+
+This repository is a fork of:
+
+- https://github.com/rodriguestiago0/actualbudget-backup
+
+The original project was based on backup workflow patterns from:
+
+- https://github.com/ttionya/vaultwarden-backup
+
+This fork keeps the upstream MIT license notice and includes additional
+modifications for this repository.

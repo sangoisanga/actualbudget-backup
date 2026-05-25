@@ -15,7 +15,7 @@ The backup system uses Rclone to talk to the storage system. At time of writing,
    ```shell
    docker run --rm -it \
      --mount type=volume,source=actualbudget-rclone-data,target=/config/ \
-     rodriguestiago0/actualbudget-backup:latest \
+     sangoisanga/actualbudget-backup:latest \
      rclone config
    ```
 
@@ -26,42 +26,55 @@ The only thing to note that we're doing differently is that Rclone is running in
 
 ### Connection to Actual
 
-Next you need to tell the container how it's going to talk to your Actual server. To start with, download the [`docker-compose.yml`](/docker-compose.yml?raw=1) file to your machine. Put it in its own folder somewhere, and then open it for editing. This guide will go over the mandatory and most used fields here. For the the full list, check the [README](/README.md) for what they do.
+Next you need to tell the container how it's going to talk to your Actual server. This project currently documents direct `docker run` usage only. For the full list of environment variables, check the [README](/README.md).
 
 #### Mandatory fields
 
-`ACTUAL_BUDGET_URL` - First, set the url of the Actual Server, including the protocol, (and the port if applicable) (NB: Do NOT add a trailing / to this. e.g. `ACTUAL_BUDGET_URL: 'https://acutal.example.com'` will work, but `ACTUAL_BUDGET_URL: 'https://acutal.example.com/'` will not)
+`ACTUAL_BUDGET_URL` - First, set the url of the Actual Server, including the protocol, (and the port if applicable) (NB: Do NOT add a trailing / to this. e.g. `ACTUAL_BUDGET_URL='https://actual.example.com'` will work, but `ACTUAL_BUDGET_URL='https://actual.example.com/'` will not)
 
-`ACTUAL_BUDGET_PASSWORD` - Second, you need to put the password for your budget. (NB: If your password contains any single quotes (`'`), you need to escape the by doubling them up e.g. if your password was `123Super'Password` you would need to enter `ACTUAL_BUDGET_PASSWORD: '123Super''Password'`.
+`ACTUAL_BUDGET_PASSWORD` - Second, you need to put the password for your budget.
 
 `ACTUAL_BUDGET_SYNC_ID` - Finally, this identifies the budget on the server. To get this ID, open Actual in your web browser, and go to `Settings`. At the bottom, click `Show advanced settings`, and the `Sync ID` should be in the top section there.
 
 #### Optional fields you might need to change
 
-`CRON` - This line tells the container what time to perform the backup. By default, it happens at midnight UTC every day. This is fine if your computer is on 24/7, but if the machine you're running this on is only active in the day, you might want to change it to happen when you know it will be on. To do this, enter any valid cron string, but note that the default config only allows one backup per day, so making it occur more frequently will overwrite the first backup.
+`CRON` - This tells the container what time to perform the backup. By default, it happens at midnight UTC every day. This is fine if your computer is on 24/7, but if the machine you're running this on is only active in the day, you might want to change it to happen when you know it will be on. To do this, enter any valid cron string, but note that the default config only allows one backup per day, so making it occur more frequently will overwrite the first backup.
 
 `TIMEZONE` - your local timezone. If you're changing the cron time, you will also want to set the timezone, else it will not run at the time you want it to. It's entered in standard TZ data format. e.g. to set the timezone to UK time, you'd set it to `TIMEZONE: 'Europe/London'`
 
 `BACKUP_KEEP_DAYS` - by default, this tool never deletes old backups. To change this behaviour, set this to the number of days to keep backups for. e.g. for a weeks worth of backups, set `BACKUP_KEEP_DAYS: 7`
 
-`ACTUAL_BUDGET_SYNC_ID_1` If you have multiple budgets to backup, you can add more sync IDs by using the `ACTUAL_BUDGET_SYNC_ID_1: ''` field to hold the second ID, and you can add as many of those as you want by incrementing the number `ACTUAL_BUDGET_SYNC_ID_2`, `ACTUAL_BUDGET_SYNC_ID_3`… etc.
+`ACTUAL_BUDGET_SYNC_ID_1` If you have multiple budgets to backup, you can add more sync IDs by using the `ACTUAL_BUDGET_SYNC_ID_1` environment variable to hold the second ID, and you can add as many of those as you want by incrementing the number `ACTUAL_BUDGET_SYNC_ID_2`, `ACTUAL_BUDGET_SYNC_ID_3`... etc.
 
 ## Testing
 
-Now all the config is set, you should run a test backup to confirm all the config is correct. To do that, run the following command from the folder where you have the docker compose file:
+Now all the config is set, you should run a test backup to confirm all the config is correct. To do that, run:
 
 ```shell
-docker compose run --rm backup backup
+docker run --rm \
+  --name actualbudget-backup-test \
+  --mount type=volume,source=actualbudget-rclone-data,target=/config/ \
+  -e ACTUAL_BUDGET_URL='https://actual.example.com' \
+  -e ACTUAL_BUDGET_PASSWORD='' \
+  -e ACTUAL_BUDGET_SYNC_ID='' \
+  sangoisanga/actualbudget-backup:latest backup
 ```
 
 If everything is ok, this will run for a few seconds, and will finish on a line similar to `upload backup file to storage system [backup/backup.<ID>.20250208.zip -> ActualBudgetBackup:/ActualBudgetBackup]`. If you check your storage system, you should now have a file called `backup.<ID>.20250208.zip` stored within there. If anything went wrong, go back and check all your env variables. If you can't work out what's gone wrong, file an issue in this repo.
 
 ## Starting the automatic backup
 
-If your test succeeded, you can now start docker running permanently. To do this, issue the following command:
+If your test succeeded, you can now start Docker running permanently. To do this, run:
 
 ```shell
-docker compose up -d
+docker run -d \
+  --restart=always \
+  --name actualbudget-backup \
+  --mount type=volume,source=actualbudget-rclone-data,target=/config/ \
+  -e ACTUAL_BUDGET_URL='https://actual.example.com' \
+  -e ACTUAL_BUDGET_PASSWORD='' \
+  -e ACTUAL_BUDGET_SYNC_ID='' \
+  sangoisanga/actualbudget-backup:latest
 ```
 
-This will start the container running, and it will automatically start every time docker does. The backup will be performed at whatever time you specified for `CRON`, or at midnight UTC if you didn't specify.
+This will start the container running, and it will automatically start every time Docker does. The backup will be performed at whatever time you specified for `CRON`, or at midnight UTC if you didn't specify.

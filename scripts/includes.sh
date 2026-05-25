@@ -42,7 +42,7 @@ function check_rclone_connection() {
     rclone ${RCLONE_GLOBAL_FLAG} config show 2>&1 | grep -F "[${RCLONE_REMOTE_NAME}]" >/dev/null
     if [[ $? != 0 ]]; then
         color red "rclone configuration information not found"
-        color blue "Please configure rclone first, check https://github.com/rodriguestiago0/actualbudget-backup#configure-rclone-%EF%B8%8F-must-read-%EF%B8%8F"
+        color blue "Please configure rclone first, check https://github.com/sangoisanga/actualbudget-backup#configure-rclone-%EF%B8%8F-must-read-%EF%B8%8F"
         return 1
     fi
 
