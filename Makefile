@@ -4,6 +4,7 @@ SCRIPT_FILES := scripts/includes.sh scripts/backup.sh scripts/entrypoint.sh
 TEST_SCRIPT_FILES := tests/test.sh \
 	tests/units/backup-zip-file/test.sh \
 	tests/units/backup-retention/test.sh \
+	tests/units/telegram-notification/test.sh \
 	tests/units/check-rclone-config-exists/test.sh \
 	tests/units/check-rclone-flags-valid/test.sh
 TEST_BASE_IMAGE ?= actualbudget-backup:test-base

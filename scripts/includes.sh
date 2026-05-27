@@ -121,19 +121,20 @@ function send_telegram() {
     fi
 
     case "${STATUS}" in
-    start) [[ "${TELEGRAM_WHEN_START}" == "TRUE" ]] || return 0 ;;
-    success) [[ "${TELEGRAM_WHEN_SUCCESS}" == "TRUE" ]] || return 0 ;;
-    failure) [[ "${TELEGRAM_WHEN_FAILURE}" == "TRUE" ]] || return 0 ;;
+    start)
+        [[ "${TELEGRAM_WHEN_START}" == "TRUE" ]] || return 0
+        ;;
+    success)
+        [[ "${TELEGRAM_WHEN_SUCCESS}" == "TRUE" ]] || return 0
+        ;;
+    failure)
+        [[ "${TELEGRAM_WHEN_FAILURE}" == "TRUE" ]] || return 0
+        ;;
     *)
         color red "unsupported telegram notification status, only supports start, success, failure"
         return 0
         ;;
     esac
-
-    local DISABLE_NOTIFICATION="false"
-    if [[ "${TELEGRAM_DISABLE_NOTIFICATION}" == "TRUE" ]]; then
-        DISABLE_NOTIFICATION="true"
-    fi
 
     local TEXT="${SUBJECT}
 
@@ -142,13 +143,13 @@ ${CONTENT}"
     PAYLOAD="$(jq -n \
         --arg chat_id "${TELEGRAM_CHAT_ID}" \
         --arg text "${TEXT}" \
+        --arg status "${STATUS}" \
         --arg parse_mode "${TELEGRAM_PARSE_MODE}" \
         --arg message_thread_id "${TELEGRAM_MESSAGE_THREAD_ID}" \
-        --argjson disable_notification "${DISABLE_NOTIFICATION}" \
         '{
             chat_id: $chat_id,
             text: $text,
-            disable_notification: $disable_notification
+            disable_notification: ($status != "failure")
         }
         + (if $parse_mode != "" then { parse_mode: $parse_mode } else {} end)
         + (if $message_thread_id != "" then { message_thread_id: ($message_thread_id | tonumber) } else {} end)')"
@@ -299,13 +300,6 @@ function init_env_telegram() {
     get_env TELEGRAM_CHAT_ID
     get_env TELEGRAM_MESSAGE_THREAD_ID
     get_env TELEGRAM_PARSE_MODE
-
-    get_env TELEGRAM_DISABLE_NOTIFICATION
-    if [[ "$(echo "${TELEGRAM_DISABLE_NOTIFICATION}" | tr '[:lower:]' '[:upper:]')" == "TRUE" ]]; then
-        TELEGRAM_DISABLE_NOTIFICATION="TRUE"
-    else
-        TELEGRAM_DISABLE_NOTIFICATION="FALSE"
-    fi
 
     get_env TELEGRAM_WHEN_START
     if [[ "$(echo "${TELEGRAM_WHEN_START}" | tr '[:lower:]' '[:upper:]')" == "FALSE" ]]; then

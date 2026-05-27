@@ -164,7 +164,7 @@ Default: `UTC`
 
 Telegram notifications are sent through the generic backup notification flow. Telegram is currently the only notification provider.
 
-Failures and successes notify by default when both `TELEGRAM_BOT_TOKEN` and `TELEGRAM_CHAT_ID` are configured. Start notifications also notify by default and can be disabled separately.
+Start, success, and failure messages are sent by default when both `TELEGRAM_BOT_TOKEN` and `TELEGRAM_CHAT_ID` are configured. Start and success messages are silent by default; failure messages use normal Telegram notifications by default.
 
 Notification delivery is best-effort. If Telegram sending fails, the backup result and exit code are preserved.
 
@@ -175,7 +175,6 @@ Notification delivery is best-effort. If Telegram sending fails, the backup resu
 | TELEGRAM_CHAT_ID | | Target chat, group, or channel ID. |
 | TELEGRAM_MESSAGE_THREAD_ID | | Optional topic/thread ID for Telegram forum groups. |
 | TELEGRAM_PARSE_MODE | | Optional Telegram parse mode, such as `MarkdownV2` or `HTML`. Plain text is used when unset. |
-| TELEGRAM_DISABLE_NOTIFICATION | `FALSE` | Send Telegram messages silently when set to `TRUE`. |
 | TELEGRAM_WHEN_START | `TRUE` | Send a Telegram notification when backup starts. |
 | TELEGRAM_WHEN_SUCCESS | `TRUE` | Send a Telegram notification when backup succeeds. |
 | TELEGRAM_WHEN_FAILURE | `TRUE` | Send a Telegram notification when backup fails. |
