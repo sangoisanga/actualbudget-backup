@@ -1,6 +1,6 @@
 # syntax=docker/dockerfile:1
 
-FROM rclone/rclone:sha-73bcae2
+FROM rclone/rclone:1.74.1
 
 LABEL "org.opencontainers.image.title"="Actual Budget Backup" \
   "org.opencontainers.image.description"="Docker image for backing up Actual Budget data to rclone remotes" \
