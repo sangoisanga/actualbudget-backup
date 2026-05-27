@@ -245,6 +245,16 @@ function get_env() {
     export "${VAR}=${VALUE}"
 }
 
+function validate_non_negative_integer() {
+    local VAR_NAME="$1"
+    local VAR_VALUE="$2"
+
+    if [[ ! "${VAR_VALUE}" =~ ^[0-9]+$ ]]; then
+        color red "${VAR_NAME} must be a non-negative integer"
+        return 1
+    fi
+}
+
 ########################################
 # Get RCLONE_REMOTE_LIST variables.
 # Arguments:
@@ -447,6 +457,12 @@ function init_env() {
     # BACKUP_KEEP_DAYS
     get_env BACKUP_KEEP_DAYS
     BACKUP_KEEP_DAYS="${BACKUP_KEEP_DAYS:-"0"}"
+    validate_non_negative_integer BACKUP_KEEP_DAYS "${BACKUP_KEEP_DAYS}" || return 1
+
+    # BACKUP_KEEP_FILES
+    get_env BACKUP_KEEP_FILES
+    BACKUP_KEEP_FILES="${BACKUP_KEEP_FILES:-"0"}"
+    validate_non_negative_integer BACKUP_KEEP_FILES "${BACKUP_KEEP_FILES}" || return 1
 
     # BACKUP_FILE_DATE_FORMAT
     get_env BACKUP_FILE_SUFFIX
@@ -475,6 +491,7 @@ function init_env() {
     color yellow "RCLONE_GLOBAL_FLAG: ${RCLONE_GLOBAL_FLAG}"
     color yellow "BACKUP_FILE_DATE_FORMAT: ${BACKUP_FILE_DATE_FORMAT} (example \"[filename].$(date +"${BACKUP_FILE_DATE_FORMAT}").zip\")"
     color yellow "BACKUP_KEEP_DAYS: ${BACKUP_KEEP_DAYS}"
+    color yellow "BACKUP_KEEP_FILES: ${BACKUP_KEEP_FILES}"
 
     color yellow "TIMEZONE: ${TIMEZONE}"
     color yellow "DISPLAY_NAME: ${DISPLAY_NAME}"

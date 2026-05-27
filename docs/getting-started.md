@@ -44,6 +44,8 @@ Next you need to tell the container how it's going to talk to your Actual server
 
 `BACKUP_KEEP_DAYS` - by default, this tool never deletes old backups. To change this behaviour, set this to the number of days to keep backups for. e.g. for a weeks worth of backups, set `BACKUP_KEEP_DAYS: 7`
 
+`BACKUP_KEEP_FILES` - minimum number of backup files to keep per budget and remote when `BACKUP_KEEP_DAYS` cleanup is enabled. For example, set `BACKUP_KEEP_FILES: 3` with `BACKUP_KEEP_DAYS: 7` to keep at least 3 backups even if the job was stopped for multiple days.
+
 `ACTUAL_BUDGET_SYNC_ID_1` If you have multiple budgets to backup, you can add more sync IDs by using the `ACTUAL_BUDGET_SYNC_ID_1` environment variable to hold the second ID, and you can add as many of those as you want by incrementing the number `ACTUAL_BUDGET_SYNC_ID_2`, `ACTUAL_BUDGET_SYNC_ID_3`... etc.
 
 ## Testing

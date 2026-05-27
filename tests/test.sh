@@ -34,6 +34,7 @@ function test_result() {
 }
 
 . tests/units/backup-zip-file/test.sh
+. tests/units/backup-retention/test.sh
 . tests/units/check-rclone-config-exists/test.sh
 . tests/units/check-rclone-flags-valid/test.sh
 

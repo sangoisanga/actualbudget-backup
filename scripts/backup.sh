@@ -106,21 +106,84 @@ function upload() {
     return 0
 }
 
+function list_backup_files() {
+    local RCLONE_REMOTE_X="$1"
+    local ACTUAL_BUDGET_SYNC_ID_X="$2"
+    local MIN_AGE="${3:-}"
+    local BACKUP_FILE_PREFIX="backup.${ACTUAL_BUDGET_SYNC_ID_X}."
+    local RCLONE_LIST_JSON
+    local RCLONE_LSJSON_ARGS=("--files-only")
+
+    if [[ -n "${MIN_AGE}" ]]; then
+        RCLONE_LSJSON_ARGS=("${RCLONE_LSJSON_ARGS[@]}" "--min-age" "${MIN_AGE}")
+    fi
+
+    # shellcheck disable=SC2086
+    if ! RCLONE_LIST_JSON="$(rclone ${RCLONE_GLOBAL_FLAG} lsjson "${RCLONE_REMOTE_X}" "${RCLONE_LSJSON_ARGS[@]}")"; then
+        color red "list backup files failed $(color yellow "[${RCLONE_REMOTE_X}]")"
+        return 1
+    fi
+
+    jq -r \
+        --arg prefix "${BACKUP_FILE_PREFIX}" \
+        'sort_by(.ModTime) | reverse | .[] | select(.Path | startswith($prefix) and endswith(".zip")) | .Path' \
+        <<<"${RCLONE_LIST_JSON}"
+}
+
 function clear_history() {
     if [[ "${BACKUP_KEEP_DAYS}" -gt 0 ]]; then
         for RCLONE_REMOTE_X in "${RCLONE_REMOTE_LIST[@]}"; do
-            color blue "delete ${BACKUP_KEEP_DAYS} days ago backup files $(color yellow "[${RCLONE_REMOTE_X}]")"
+            for ACTUAL_BUDGET_SYNC_ID_X in "${ACTUAL_BUDGET_SYNC_ID_LIST[@]}"; do
+                color blue "delete ${BACKUP_KEEP_DAYS} days ago backup files $(color yellow "[${RCLONE_REMOTE_X}/${ACTUAL_BUDGET_SYNC_ID_X}]")"
 
-            # shellcheck disable=SC2086
-            mapfile -t RCLONE_DELETE_LIST < <(rclone ${RCLONE_GLOBAL_FLAG} lsf "${RCLONE_REMOTE_X}" --min-age "${BACKUP_KEEP_DAYS}d")
+                local RCLONE_PROTECTED_FILE
+                local RCLONE_KEEP_FILE
+                local RCLONE_KEEP_OUTPUT=""
+                local RCLONE_DELETE_FILE
+                local RCLONE_DELETE_OUTPUT=""
+                local RCLONE_KEEP_LIST=()
+                local RCLONE_DELETE_LIST=()
+                declare -A RCLONE_PROTECTED_FILE_MAP=()
 
-            for RCLONE_DELETE_FILE in "${RCLONE_DELETE_LIST[@]}"; do
-                color yellow "deleting \"${RCLONE_DELETE_FILE}\""
+                if [[ "${BACKUP_KEEP_FILES}" -gt 0 ]]; then
+                    if ! RCLONE_KEEP_OUTPUT="$(list_backup_files "${RCLONE_REMOTE_X}" "${ACTUAL_BUDGET_SYNC_ID_X}")"; then
+                        continue
+                    fi
 
-                # shellcheck disable=SC2086
-                if ! rclone ${RCLONE_GLOBAL_FLAG} delete "${RCLONE_REMOTE_X}/${RCLONE_DELETE_FILE}"; then
-                    color red "delete \"${RCLONE_DELETE_FILE}\" failed"
+                    if [[ -n "${RCLONE_KEEP_OUTPUT}" ]]; then
+                        mapfile -t RCLONE_KEEP_LIST <<<"${RCLONE_KEEP_OUTPUT}"
+                    fi
+
+                    for RCLONE_KEEP_FILE in "${RCLONE_KEEP_LIST[@]:0:${BACKUP_KEEP_FILES}}"; do
+                        RCLONE_PROTECTED_FILE_MAP["${RCLONE_KEEP_FILE}"]=1
+                    done
                 fi
+
+                if ! RCLONE_DELETE_OUTPUT="$(list_backup_files "${RCLONE_REMOTE_X}" "${ACTUAL_BUDGET_SYNC_ID_X}" "${BACKUP_KEEP_DAYS}d")"; then
+                    continue
+                fi
+
+                if [[ -n "${RCLONE_DELETE_OUTPUT}" ]]; then
+                    mapfile -t RCLONE_DELETE_LIST <<<"${RCLONE_DELETE_OUTPUT}"
+                fi
+
+                for RCLONE_DELETE_FILE in "${RCLONE_DELETE_LIST[@]}"; do
+                    if [[ -n "${RCLONE_PROTECTED_FILE_MAP[${RCLONE_DELETE_FILE}]:-}" ]]; then
+                        color yellow "keeping \"${RCLONE_DELETE_FILE}\" because BACKUP_KEEP_FILES=${BACKUP_KEEP_FILES}"
+                        continue
+                    fi
+
+                    color yellow "deleting \"${RCLONE_DELETE_FILE}\""
+
+                    # shellcheck disable=SC2086
+                    if ! rclone ${RCLONE_GLOBAL_FLAG} delete "${RCLONE_REMOTE_X}/${RCLONE_DELETE_FILE}"; then
+                        color red "delete \"${RCLONE_DELETE_FILE}\" failed"
+                    fi
+                done
+
+                for RCLONE_PROTECTED_FILE in "${!RCLONE_PROTECTED_FILE_MAP[@]}"; do
+                    unset "RCLONE_PROTECTED_FILE_MAP[${RCLONE_PROTECTED_FILE}]"
+                done
             done
         done
     fi

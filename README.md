@@ -126,7 +126,15 @@ Default: `0 0 * * *` (run the script at 12AM every day)
 
 ### BACKUP_KEEP_DAYS
 
-Only keep last a few days backup files in the storage system. Set to `0` to keep all backup files.
+Only keep backup files from the last few days in the storage system. Set to `0` to keep all backup files.
+
+Default: `0`
+
+### BACKUP_KEEP_FILES
+
+Minimum number of backup files to keep per budget and remote when `BACKUP_KEEP_DAYS` cleanup is enabled. Set to `0` to keep the current age-only cleanup behavior.
+
+For example, `BACKUP_KEEP_DAYS=7` and `BACKUP_KEEP_FILES=3` deletes backups older than 7 days, but always keeps at least the 3 newest backup files for each budget on each remote. This protects history if scheduled backups stop for multiple days.
 
 Default: `0`
 
