@@ -182,9 +182,9 @@ ${CONTENT}"
 #     notification content
 ########################################
 function send_notification() {
-    local SUBJECT_START="${DISPLAY_NAME} Backup Start"
-    local SUBJECT_SUCCESS="${DISPLAY_NAME} Backup Success"
-    local SUBJECT_FAILURE="${DISPLAY_NAME} Backup Failed"
+    local SUBJECT_START="🏎️ ${DISPLAY_NAME} Backup Start"
+    local SUBJECT_SUCCESS="✅ ${DISPLAY_NAME} Backup Success"
+    local SUBJECT_FAILURE="🔥 ${DISPLAY_NAME} Backup Failed"
 
     case "$1" in
     start)
