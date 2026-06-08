@@ -163,13 +163,28 @@ ${CONTENT}"
         return 0
     fi
 
-    curl --fail --silent --show-error --max-time 15 --retry 3 --retry-delay 1 \
-        -o /dev/null \
+    local RESPONSE
+    local CURL_EXIT_CODE
+    local HTTP_STATUS
+    local RESPONSE_BODY
+
+    RESPONSE="$(curl --silent --show-error --max-time 15 --retry 3 --retry-delay 1 \
+        --write-out $'\n%{http_code}' \
         -H "Content-Type: application/json" \
         -d "${PAYLOAD}" \
-        "https://api.telegram.org/bot${TELEGRAM_BOT_TOKEN}/sendMessage"
-    if [[ $? != 0 ]]; then
+        "https://api.telegram.org/bot${TELEGRAM_BOT_TOKEN}/sendMessage")"
+    CURL_EXIT_CODE=$?
+    HTTP_STATUS="${RESPONSE##*$'\n'}"
+    RESPONSE_BODY="${RESPONSE%$'\n'*}"
+
+    if [[ "${CURL_EXIT_CODE}" != 0 || ! "${HTTP_STATUS}" =~ ^2[0-9][0-9]$ ]]; then
         color red "${STATUS} telegram sending has failed"
+        color red "telegram curl exit code: ${CURL_EXIT_CODE}"
+        color red "telegram HTTP status: ${HTTP_STATUS}"
+
+        if [[ -n "${RESPONSE_BODY}" ]]; then
+            color red "telegram response: ${RESPONSE_BODY}"
+        fi
     else
         color blue "${STATUS} telegram has been sent successfully"
     fi
